@@ -1,0 +1,204 @@
+/*
+ * Copyright (C) 2019 Vegard Hella <hella@otbelectronics.com>
+ *
+ */
+
+/dts-v1/;
+/include/ "zynq-7000.dtsi"
+
+/ {
+	model = "OTBelec Protoboard"
+	compatible = "otbelec,protoboard", "xlnx,zynq-7000";
+
+	aliases {
+		ethernet0 = &gem0;
+		i2c0 = &i2c0;
+		i2c1 = &i2c1;
+		serial0 = &uart1;
+		spi0 = &qspi;
+	};
+
+	chosen {
+		bootargs = "earlycon";
+		stdout-path = "serial0:115200n8";
+	};
+
+	memory {
+		device_type = "memory";
+		reg = <0x0 0x20000000>;
+	};
+
+	cpus {
+		cpu@0 {
+			operating-points = <500000 1000000 250000 1000000>;
+		};
+	};
+
+	amba_pl: amba_pl {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		compatible = "simple-bus";
+		ranges;
+
+		i2s_transmitter_0: i2s_transmitter@43c10000 {
+			aud_mclk = <24576000>;
+			clock-names = "s_axi_ctrl_aclk", "aud_mclk", "s_axis_aud_aclk";
+			clocks = <&clkc 15>, <&misc_clk_0>, <&clkc 15>;
+			compatible = "xlnx,i2s-transmitter-1.0", "xlnx,i2s-transmitter-1.0";
+			reg = <0x43c10000 0x10000>;
+			xlnx,depth = <0x80>;
+			xlnx,dwidth = <0x18>;
+			xlnx,num-channels = <0x3>;
+			xlnx,snd-pcm = <&audio_formatter_0>;
+		};
+
+		misc_clk_0: misc_clk_0 {
+			#clock-cells = <0>;
+			clock-frequency = <24576000>;
+			compatible = "fixed-clock";
+		};
+
+		audio_formatter_0: audio_formatter@40000000 {
+			clock-names = "s_axi_lite_aclk", "m_axis_mm2s_aclk", "aud_mclk";
+			clocks = <&clkc 15>, <&clkc 15>, <&misc_clk_0>;
+			compatible = "xlnx,audio-formatter-1.0", "xlnx,audio-formatter-1.0";
+			reg = <0x40000000 0x1000>;
+			xlnx,include-mm2s = <0x1>;
+			xlnx,include-s2mm = <0x0>;
+			xlnx,max-num-channels-mm2s = <0x6>;
+			xlnx,max-num-channels-s2mm = <0x2>;
+			xlnx,mm2s-addr-width = <0x40>;
+			xlnx,mm2s-async-clock = <0x0>;
+			xlnx,mm2s-dataformat = <0x3>;
+			xlnx,packing-mode-mm2s = <0x0>;
+			xlnx,packing-mode-s2mm = <0x0>;
+			xlnx,s2mm-addr-width = <0x40>;
+			xlnx,s2mm-async-clock = <0x1>;
+			xlnx,s2mm-dataformat = <0x1>;
+			xlnx,tx = <&i2s_transmitter_0>;
+		};
+	};
+};
+
+&gem0 {
+	status = "okay";
+	xlnx,ptp-enet-clock = <0x4f790d8>;
+	phy-mode = "rgmii-id";    
+	phy-handle = <&phy0>;
+    phy0: phy@0 {
+        compatible = "atheros,ar8035";
+        device_type = "ethernet-phy";
+        reg = <0>;
+    };
+};
+
+&gpio0 {
+	emio-gpio-width = <64>;
+	gpio-mask-high = <0x0>;
+	gpio-mask-low = <0x5600>;
+};
+
+&i2c0 {
+	status = "okay";
+	clock-frequency = <400000>;
+
+	ak4458: dac@13 {
+		compatible = "asahi-kasei,ak4458";
+		reg = <0x13>;
+	};
+
+	ak5558: adc@10 {
+		compatible = "asahi-kasei,ak5558";
+		reg = <0x10>;
+	};
+};
+
+&i2c1 {
+	status = "okay";
+	clock-frequency = <400000>;
+};
+
+&intc {
+	num_cpus = <2>;
+	num_interrupts = <96>;
+};
+
+&qspi {
+	status = "okay";
+	is-dual = <0>;
+	num-cs = <1>;
+	spi-rx-bus-width = <4>;
+	spi-tx-bus-width = <4>;
+	xlnx,fb-clk = <0x1>;
+	xlnx,qspi-mode = <0x0>;
+	flash@0 {
+		compatible = "n25q128";
+		reg = <0x0>;
+		spi-tx-bus-width = <1>;
+		spi-rx-bus-width = <4>;
+		spi-max-frequency = <50000000>;
+		#address-cells = <1>;
+		#size-cells = <1>;
+		partition@qspi-boot {
+			label = "qspi-boot";
+			reg = <0x0 0x080000>;
+		};
+		partition@qspi-bootenv {
+			label = "qspi-bootenv";
+			reg = <0x080000 0x020000>;
+		};		
+		partition@qspi-bitstream {
+			label = "qspi-bitstream";
+			reg = <0x0A0000 0x460000>;
+		};		
+		partition@qspi-kernel {
+			label = "qspi-kernel";
+			reg = <0x500000 0x480000>;
+		};
+		partition@qspi-devicetree {
+			label = "qspi-devicetree";
+			reg = <0x980000 0x010000>;
+		};
+		partition@qspi-rootfs {
+			label = "qspi-rootfs";
+			reg = <0x990000 0x600000>;
+		};
+		partition@qspi-data {
+			label = "data";
+			reg = <0xF90000 0x070000>;
+		};
+	};
+};
+
+&sdhci0 {
+	status = "okay";
+	xlnx,has-cd = <0x1>;
+	xlnx,has-power = <0x0>;
+	xlnx,has-wp = <0x1>;
+};
+
+&sdhci1 {
+	status = "okay";
+	xlnx,has-cd = <0x1>;
+	xlnx,has-power = <0x0>;
+	xlnx,has-wp = <0x0>;
+};
+
+&uart1 {
+	status = "okay";
+	cts-override;
+	device_type = "serial";
+	port-number = <0>;
+};
+
+&usb0 {
+	status = "okay";
+	phy_type = "ulpi";
+	usb-reset = <&gpio0 7 0>;
+};
+
+&clkc {
+	fclk-enable = <0x1>;
+	ps-clk-frequency = <33333333>;
+};
+
