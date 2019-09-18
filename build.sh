@@ -7,4 +7,4 @@ export CROSS_COMPILE=arm-linux-gnueabihf-
 
 make otbelec_protoboard_defconfig
 make UIMAGE_LOADADDR=0x8000 uImage
-
+make otbelec-protoboard.dtb
