@@ -1,0 +1,1 @@
+obj-y += otbelec_sound_driver.o
