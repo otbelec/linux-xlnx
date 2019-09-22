@@ -81,6 +81,10 @@
 			xlnx,tx = <&i2s_transmitter_0>;
 		};
 	};
+	
+	sound {
+	    compatible = "otbelec,sound-driver";
+	};
 };
 
 &gem0 {

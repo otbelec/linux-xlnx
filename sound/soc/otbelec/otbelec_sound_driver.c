@@ -11,6 +11,7 @@
 #include <sound/soc.h>
 #include <sound/pcm_params.h>
 #include <linux/module.h>
+#include <linux/of_device.h>
 
 #include "../xilinx/xlnx_snd_common.h"
 
@@ -135,9 +136,16 @@ static int otbelec_snd_remove(struct platform_device *pdev)
     return 0;
 }
 
+static const struct of_device_id otbelec_sound_driver_id = {
+	.compatible = "otbelec,sound-driver",
+};
+
+MODULE_DEVICE_TABLE(of, &otbelec_sound_driver_id);
+
 static struct platform_driver otbelec_sound_driver = {
     .driver = {
         .name = "otbelec-sound-driver",
+		.of_match_table = &otbelec_sound_driver_id,
     },
     .probe = otbelec_snd_probe,
     .remove = otbelec_snd_remove,
