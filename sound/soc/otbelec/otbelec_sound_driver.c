@@ -2,6 +2,9 @@
 /*
  * OTBelec ALSA sound card driver (machine driver).
  *
+ * Limitations:
+ *  - Only supports fixed mclk of 24.576 MHz.
+ * 
  * Copyright (C) 2019 OTBelec
  */
 
@@ -10,6 +13,7 @@
 #include <linux/module.h>
 
 #include "../xilinx/xlnx_snd_common.h"
+
 
 static int protoboard_hw_params(struct snd_pcm_substream *substream, struct snd_pcm_hw_params *params)
 {
@@ -27,12 +31,11 @@ static int protoboard_hw_params(struct snd_pcm_substream *substream, struct snd_
         return -EINVAL;
 
     prv = snd_soc_card_get_drvdata(rtd->card);
-    prv->mclk_val = 24576000; //TODO: get mclk from device tree.
 
     /* Set Fs Multiplier value used by xilinx audio-formatter. */
     switch (sample_rate) {
         case 32000:
-            prv->mclk_ratio = 768;
+            prv->mclk_ratio = 768; //TODO: ratio depends on mclk freq
             break;
         case 48000:
             prv->mclk_ratio = 512;
@@ -67,7 +70,6 @@ static const struct snd_soc_ops protoboard_snd_ops = {
 static struct snd_soc_dai_link protoboard_dai_link_dac = {
     .name = "i2s-link-dac",
     .stream_name = "pcm-stream-dac",
-    .cpu_name = "xlnx_i2s",
     .cpu_dai_name = "xlnx_i2s_playback",
     .codec_name = "ak4458",
     .codec_dai_name = "ak4458-aif",
@@ -100,18 +102,26 @@ static int otbelec_snd_probe(struct platform_device *pdev)
 {
     int ret;
     struct snd_soc_card *card = &protoboard_snd_card;
-    
+    //struct snd_soc_dai_link *dai_link = &protoboard_dai_link_dac;
+    struct pl_card_data *prv;
+
     card->dev = &pdev->dev;
 
-    ret = snd_soc_register_card(card);
+    prv = devm_kzalloc(card->dev, sizeof(struct pl_card_data), GFP_KERNEL);
+    if (!prv)
+        return -ENOMEM;
 
+    prv->mclk_val = 24576000; //TODO: get mclk freq from device tree.
+
+
+    ret = snd_soc_register_card(card);
     if (ret)
     {
-        dev_err(&pdev->dev, "protoboard snd_soc_register_card() failed!\n");
+        dev_err(&pdev->dev, "protoboard register sound card failed!\n");
         return ret;
     }
 
-    dev_info(&pdev->dev, "protoboard sound card registered\n");
+    dev_info(&pdev->dev, "otbelec sound card driver probe successful\n");
 
     return 0;
 }
@@ -136,6 +146,6 @@ static struct platform_driver otbelec_sound_driver = {
 
 module_platform_driver(otbelec_sound_driver);
 
-MODULE_DESCRIPTION("OTBelec ALSA sound card driver");
+MODULE_DESCRIPTION("OTBelec ALSA sound card driver.");
 MODULE_AUTHOR("Vegard Hella");
 MODULE_LICENSE("GPL v2");
