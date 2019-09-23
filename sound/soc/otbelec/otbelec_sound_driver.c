@@ -71,8 +71,6 @@ static const struct snd_soc_ops protoboard_snd_ops = {
 static struct snd_soc_dai_link protoboard_dai_link_dac = {
     .name = "i2s-link-dac",
     .stream_name = "pcm-stream-dac",
-    .cpu_dai_name = "xlnx_i2s_playback",
-    .codec_name = "ak4458",
     .codec_dai_name = "ak4458-aif",
     .dai_fmt = SND_SOC_DAIFMT_I2S | SND_SOC_DAIFMT_CBS_CFS, //format info to codec
     .platform_name = "xlnx_formatter_pcm",
@@ -85,7 +83,6 @@ static struct snd_soc_dai_link protoboard_dai_link_adc = {
     .stream_name = "pcm-stream-adc",
     .cpu_name = "xlnx_i2s",
     .cpu_dai_name = "xlnx_i2s_capture",
-    .codec_name = "ak5558",
     .codec_dai_name = "ak5558-aif",
     .platform_name = "xlnx_formatter_pcm",
     .ops = &protoboard_snd_ops,
@@ -103,17 +100,31 @@ static int otbelec_snd_probe(struct platform_device *pdev)
 {
     int ret;
     struct snd_soc_card *card = &protoboard_snd_card;
-    //struct snd_soc_dai_link *dai_link = &protoboard_dai_link_dac;
+    struct snd_soc_dai_link *dai_link = &protoboard_dai_link_dac;
     struct pl_card_data *prv;
+    struct device_node *phandle;
 
     card->dev = &pdev->dev;
 
+    /* Attach PCM Audio Formatter using device tree lookup */
+
+
+    /* Attach i2s driver using device tree lookup */
+    phandle = of_parse_phandle(card->dev->of_node, "i2s-tx", 0);
+    dai_link->cpu_of_node = phandle;
+
+    /* Attach DAC using device tree lookup */
+    phandle = of_parse_phandle(card->dev->of_node, "dac", 0);
+    dai_link->codec_of_node = phandle;
+
+    /* Attach ADC to I2S capture using device tree lookup */
+
+
+    /* mclk properties as custom data shared with xilinx audio formatter */
     prv = devm_kzalloc(card->dev, sizeof(struct pl_card_data), GFP_KERNEL);
     if (!prv)
         return -ENOMEM;
-
     prv->mclk_val = 24576000; //TODO: get mclk freq from device tree.
-
 
     ret = snd_soc_register_card(card);
     if (ret)
