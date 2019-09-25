@@ -147,16 +147,17 @@ static int otbelec_snd_remove(struct platform_device *pdev)
     return 0;
 }
 
-static const struct of_device_id otbelec_sound_driver_id = {
-	.compatible = "otbelec,sound-driver",
+static const struct of_device_id otbelec_sound_driver_id[] = {
+    {.compatible = "otbelec,sound-driver"},
+    {},
 };
 
-MODULE_DEVICE_TABLE(of, &otbelec_sound_driver_id);
+MODULE_DEVICE_TABLE(of, otbelec_sound_driver_id);
 
 static struct platform_driver otbelec_sound_driver = {
     .driver = {
         .name = "otbelec-sound-driver",
-		.of_match_table = &otbelec_sound_driver_id,
+		.of_match_table = otbelec_sound_driver_id,
     },
     .probe = otbelec_snd_probe,
     .remove = otbelec_snd_remove,
