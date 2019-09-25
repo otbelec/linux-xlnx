@@ -95,8 +95,10 @@
 	phy-mode = "rgmii-id";    
 	phy-handle = <&phy0>;
     phy0: phy@0 {
+        /* KSZ9031RN */
         device_type = "ethernet-phy";
         reg = <0>;
+        reset-gpios = <&gpio0 7 1>;
     };
 };
 
