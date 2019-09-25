@@ -98,7 +98,7 @@
         /* KSZ9031RN */
         device_type = "ethernet-phy";
         reg = <0>;
-        reset-gpios = <&gpio0 7 1>;
+        /* reset-gpios = <&gpio0 7 1>; */ /* Driver doesn't reset correctly. */
     };
 };
 
