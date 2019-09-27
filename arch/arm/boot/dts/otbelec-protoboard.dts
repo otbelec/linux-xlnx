@@ -84,6 +84,7 @@
 	
 	sound {
 	    compatible = "otbelec,sound-driver";
+		pcm = <&audio_formatter_0>;
 		i2s-tx = <&i2s_transmitter_0>;
 		dac = <&ak4458>;
 	};

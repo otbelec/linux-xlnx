@@ -24,6 +24,8 @@ static int protoboard_hw_params(struct snd_pcm_substream *substream, struct snd_
     struct pl_card_data *prv;
     struct snd_soc_pcm_runtime *rtd = substream->private_data;
 
+	dev_info(rtd->dev, "otbelec sound driver hw params\n");
+
     num_ch = params_channels(params);
     sample_rate = params_rate(params);
     bit_depth = params_width(params);
@@ -60,12 +62,22 @@ static int protoboard_hw_params(struct snd_pcm_substream *substream, struct snd_
     /* Set SCLK Divider value used by xilinx i2s-transmitter. */
     clk_div = DIV_ROUND_UP(prv->mclk_ratio, 2 * num_ch * bit_depth);
     ret = snd_soc_dai_set_clkdiv(rtd->cpu_dai, 0, clk_div);
-
+    if (ret)
+        dev_err(rtd->card->dev, "Set Clock Divider failed!\n");
     return ret;
+}
+
+static int protoboard_hw_free(struct snd_pcm_substream *substream)
+{
+    struct snd_soc_pcm_runtime *rtd = substream->private_data;
+	dev_info(rtd->dev, "otbelec sound driver hw free!\n");
+
+    return 0;
 }
 
 static const struct snd_soc_ops protoboard_snd_ops = {
     .hw_params = protoboard_hw_params,
+    .hw_free = protoboard_hw_free,
 };
 
 static struct snd_soc_dai_link protoboard_dai_link_dac = {
@@ -73,8 +85,8 @@ static struct snd_soc_dai_link protoboard_dai_link_dac = {
     .stream_name = "pcm-stream-dac",
     .codec_dai_name = "ak4458-aif",
     .dai_fmt = SND_SOC_DAIFMT_I2S | SND_SOC_DAIFMT_CBS_CFS, //format info to codec
-    .platform_name = "xlnx_formatter_pcm",
     .ops = &protoboard_snd_ops,
+    .playback_only = true,
 };
 
 /*
@@ -89,11 +101,28 @@ static struct snd_soc_dai_link protoboard_dai_link_adc = {
 };
 */
 
+static const struct snd_soc_dapm_widget protoboard_widgets[] = {
+    SND_SOC_DAPM_HP("Headphone Jack", NULL),
+    SND_SOC_DAPM_OUTPUT("Output 1"),
+    SND_SOC_DAPM_OUTPUT("Output 2"),
+};
+
+static const struct snd_soc_dapm_route protoboard_route[] = {
+    {"Output 1", NULL, "AK4458 AOUTA"},
+    {"Headphone Jack", NULL, "AK4458 AOUTB"},
+    {"Output 2", NULL, "AK4458 AOUTC"},
+};
+
 static struct snd_soc_card protoboard_snd_card = {
     .name = "protoboard-snd-card",
     .owner = THIS_MODULE,
     .dai_link = &protoboard_dai_link_dac,
     .num_links = 1,
+    .dapm_widgets = protoboard_widgets,
+    .num_dapm_widgets = ARRAY_SIZE(protoboard_widgets),
+    .dapm_routes = protoboard_route,
+    .num_dapm_routes = ARRAY_SIZE(protoboard_route),
+    .fully_routed = true,
 };
 
 static int otbelec_snd_probe(struct platform_device *pdev)
@@ -107,7 +136,8 @@ static int otbelec_snd_probe(struct platform_device *pdev)
     card->dev = &pdev->dev;
 
     /* Attach PCM Audio Formatter using device tree lookup */
-
+    phandle = of_parse_phandle(card->dev->of_node, "pcm", 0);
+    dai_link->platform_of_node = phandle;
 
     /* Attach i2s driver using device tree lookup */
     phandle = of_parse_phandle(card->dev->of_node, "i2s-tx", 0);
@@ -125,6 +155,7 @@ static int otbelec_snd_probe(struct platform_device *pdev)
     if (!prv)
         return -ENOMEM;
     prv->mclk_val = 24576000; //TODO: get mclk freq from device tree.
+    snd_soc_card_set_drvdata(card, prv);
 
     ret = snd_soc_register_card(card);
     if (ret)
