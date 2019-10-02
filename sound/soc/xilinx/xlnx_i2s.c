@@ -154,7 +154,7 @@ static int xlnx_i2s_probe(struct platform_device *pdev)
 		dai_drv->name = "xlnx_i2s_playback";
 		dai_drv->playback.stream_name = "Playback";
 		dai_drv->playback.formats = format;
-		dai_drv->playback.channels_min = ch;
+		dai_drv->playback.channels_min = 2;
 		dai_drv->playback.channels_max = ch;
 		dai_drv->playback.rates	= SNDRV_PCM_RATE_8000_192000;
 		dai_drv->ops = &xlnx_i2s_dai_ops;
