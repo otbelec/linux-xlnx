@@ -11,6 +11,7 @@ make UIMAGE_LOADADDR=0x8000 uImage
 make otbelec-protoboard.dtb
 
 make modules_prepare
-make modules
-make modules_install
+make modules && make modules_install
+
+tar cf $INSTALL_MOD_PATH/rootfs_modules.tar -C $INSTALL_MOD_PATH lib/
 
