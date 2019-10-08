@@ -7,11 +7,16 @@ export ARCH=arm
 export CROSS_COMPILE=arm-linux-gnueabihf-
 
 make otbelec_protoboard_defconfig
+
+# Kernel
 make UIMAGE_LOADADDR=0x8000 uImage
+
+# Devicetree
 make otbelec-protoboard.dtb
 
+# Modules
+rm -rf $INSTALL_MOD_PATH/lib/
 make modules_prepare
 make modules && make modules_install
-
-tar cf $INSTALL_MOD_PATH/rootfs_modules.tar -C $INSTALL_MOD_PATH lib/
+tar -cf $INSTALL_MOD_PATH/rootfs_modules.tar -C $INSTALL_MOD_PATH lib/
 

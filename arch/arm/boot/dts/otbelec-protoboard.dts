@@ -127,6 +127,22 @@
 &i2c1 {
 	status = "okay";
 	clock-frequency = <400000>;
+
+	keypad: tca8418@34 {
+		compatible = "ti,tca8418";
+		reg = <0x34>;
+		interrupt-parent = <&intc>;
+		interrupts = <0 30 1>; /* 1: raising edge (inverted in fpga, compared to chip) */
+		linux,keymap = <0x00000001 		/* SW1 (row 00 col 00 keycode 0001) */
+						0x00010002 		/* SW2 */
+						0x01000003 		/* SW3 */
+						0x01010004 		/* SW4 */
+						0x01020005 		/* SW5 */
+						0x02000006		/* SW6 */
+						0x02010007>;	/* SW7 */
+		keypad,num-rows = <3>;
+		keypad,num-columns = <3>;
+	};
 };
 
 &intc {
