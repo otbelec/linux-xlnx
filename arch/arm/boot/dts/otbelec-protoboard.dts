@@ -41,20 +41,20 @@
 		ranges;
 
 		i2s_transmitter_0: i2s_transmitter@43c10000 {
-			aud_mclk = <24576000>;
+			aud_mclk = <36864000>;
 			clock-names = "s_axi_ctrl_aclk", "aud_mclk", "s_axis_aud_aclk";
 			clocks = <&clkc 15>, <&misc_clk_0>, <&clkc 15>;
 			compatible = "xlnx,i2s-transmitter-1.0", "xlnx,i2s-transmitter-1.0";
 			reg = <0x43c10000 0x10000>;
 			xlnx,depth = <0x80>;
 			xlnx,dwidth = <0x18>;
-			xlnx,num-channels = <0x3>;
+			xlnx,num-channels = <0x1>;
 			xlnx,snd-pcm = <&audio_formatter_0>;
 		};
 
 		misc_clk_0: misc_clk_0 {
 			#clock-cells = <0>;
-			clock-frequency = <24576000>;
+			clock-frequency = <36864000>; /* synthesized in FPGA from external 24.576 MHz clock */
 			compatible = "fixed-clock";
 		};
 
@@ -68,7 +68,7 @@
 			reg = <0x40000000 0x1000>;
 			xlnx,include-mm2s = <0x1>;
 			xlnx,include-s2mm = <0x0>;
-			xlnx,max-num-channels-mm2s = <0x6>;
+			xlnx,max-num-channels-mm2s = <0x2>;
 			xlnx,max-num-channels-s2mm = <0x2>;
 			xlnx,mm2s-addr-width = <0x40>;
 			xlnx,mm2s-async-clock = <0x0>;
@@ -82,6 +82,22 @@
 		};
 	};
 	
+	rotary@0 {
+		compatible = "rotary-encoder";
+		gpios = <&gpio0 54 0>, <&gpio0 55 0>;
+		linux,axis = <0>; /* REL_X */
+		rotary-encoder,encoding = "gray";
+		rotary-encoder,relative-axis;
+	};
+
+	rotary@1 {
+		compatible = "rotary-encoder";
+		gpios = <&gpio0 56 0>, <&gpio0 57 0>;
+		linux,axis = <0>; /* REL_X */
+		rotary-encoder,encoding = "gray";
+		rotary-encoder,relative-axis;
+	};
+
 	sound {
 	    compatible = "otbelec,sound-driver";
 		pcm = <&audio_formatter_0>;
@@ -104,9 +120,22 @@
 };
 
 &gpio0 {
-	emio-gpio-width = <64>;
+	emio-gpio-width = <4>;
 	gpio-mask-high = <0x0>;
 	gpio-mask-low = <0x5600>;
+};
+
+&adc {
+    xlnx,channels {
+        #address-cells = <1>;
+        #size-cells = <0>;
+        channel@3 { /* Vaux2: Fader 2 */
+            reg = <3>;
+        };
+        channel@11 { /* Vaux10: Fader 1 */
+            reg = <11>;
+        };
+    };
 };
 
 &i2c0 {
@@ -219,7 +248,6 @@
 &usb0 {
 	status = "okay";
 	phy_type = "ulpi";
-	usb-reset = <&gpio0 7 0>;
 };
 
 &clkc {
