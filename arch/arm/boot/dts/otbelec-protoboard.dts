@@ -81,7 +81,15 @@
 			xlnx,tx = <&i2s_transmitter_0>;
 		};
 	};
-	
+
+	usb_phy0: phy0@e0002000 {
+		compatible = "ulpi-phy";
+		#phy-cells = <0>;
+		reg = <0xe0002000 0x1000>;
+		view-port = <0x0170>;
+		drv-vbus;
+	};
+
 	rotary@0 {
 		compatible = "rotary-encoder";
 		gpios = <&gpio0 54 0>, <&gpio0 55 0>;
@@ -247,7 +255,9 @@
 
 &usb0 {
 	status = "okay";
+	dr_mode = "peripheral";
 	phy_type = "ulpi";
+	usb-phy = <&usb_phy0>;
 };
 
 &clkc {
