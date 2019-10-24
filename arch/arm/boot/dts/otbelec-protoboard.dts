@@ -39,47 +39,6 @@
 		#size-cells = <1>;
 		compatible = "simple-bus";
 		ranges;
-
-		i2s_transmitter_0: i2s_transmitter@43c10000 {
-			aud_mclk = <36864000>;
-			clock-names = "s_axi_ctrl_aclk", "aud_mclk", "s_axis_aud_aclk";
-			clocks = <&clkc 15>, <&misc_clk_0>, <&clkc 15>;
-			compatible = "xlnx,i2s-transmitter-1.0", "xlnx,i2s-transmitter-1.0";
-			reg = <0x43c10000 0x10000>;
-			xlnx,depth = <0x80>;
-			xlnx,dwidth = <0x18>;
-			xlnx,num-channels = <0x1>;
-			xlnx,snd-pcm = <&audio_formatter_0>;
-		};
-
-		misc_clk_0: misc_clk_0 {
-			#clock-cells = <0>;
-			clock-frequency = <36864000>; /* synthesized in FPGA from external 24.576 MHz clock */
-			compatible = "fixed-clock";
-		};
-
-		audio_formatter_0: audio_formatter@40000000 {
-			clock-names = "s_axi_lite_aclk", "m_axis_mm2s_aclk", "aud_mclk";
-			clocks = <&clkc 15>, <&clkc 15>, <&misc_clk_0>;
-			compatible = "xlnx,audio-formatter-1.0", "xlnx,audio-formatter-1.0";
-			interrupt-names = "irq_mm2s";
-			interrupt-parent = <&intc>;
-			interrupts = <0 29 4>;
-			reg = <0x40000000 0x1000>;
-			xlnx,include-mm2s = <0x1>;
-			xlnx,include-s2mm = <0x0>;
-			xlnx,max-num-channels-mm2s = <0x2>;
-			xlnx,max-num-channels-s2mm = <0x2>;
-			xlnx,mm2s-addr-width = <0x40>;
-			xlnx,mm2s-async-clock = <0x0>;
-			xlnx,mm2s-dataformat = <0x3>;
-			xlnx,packing-mode-mm2s = <0x0>;
-			xlnx,packing-mode-s2mm = <0x0>;
-			xlnx,s2mm-addr-width = <0x40>;
-			xlnx,s2mm-async-clock = <0x1>;
-			xlnx,s2mm-dataformat = <0x1>;
-			xlnx,tx = <&i2s_transmitter_0>;
-		};
 	};
 
 	usb_phy0: phy0@e0002000 {
@@ -106,12 +65,6 @@
 		rotary-encoder,relative-axis;
 	};
 
-	sound {
-	    compatible = "otbelec,sound-driver";
-		pcm = <&audio_formatter_0>;
-		i2s-tx = <&i2s_transmitter_0>;
-		dac = <&ak4458>;
-	};
 };
 
 &gem0 {
@@ -123,7 +76,7 @@
         /* KSZ9031RN */
         device_type = "ethernet-phy";
         reg = <0>;
-        /* reset-gpios = <&gpio0 7 1>; */ /* Driver doesn't reset correctly. */
+        /* reset-gpios = <&gpio0 7 1>; */ /* Driver doesn't reset correctly. See /etc/init.d modules. */
     };
 };
 
@@ -149,16 +102,6 @@
 &i2c0 {
 	status = "okay";
 	clock-frequency = <400000>;
-
-	ak4458: dac@13 {
-		compatible = "asahi-kasei,ak4458";
-		reg = <0x13>;
-	};
-
-	ak5558: adc@10 {
-		compatible = "asahi-kasei,ak5558";
-		reg = <0x10>;
-	};
 };
 
 &i2c1 {

@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0
 /*
  * OTBelec ALSA sound card driver (machine driver).
- *
- * Limitations:
- *  - Only supports fixed mclk of 24.576 MHz.
  * 
  * Copyright (C) 2019 OTBelec
  */
@@ -38,22 +35,22 @@ static int protoboard_hw_params(struct snd_pcm_substream *substream, struct snd_
     /* Set Fs Multiplier value used by xilinx audio-formatter. */
     switch (sample_rate) {
         case 32000:
-            prv->mclk_ratio = 768; //TODO: ratio depends on mclk freq
+            prv->mclk_ratio = 1152; //TODO: ratio depends on mclk freq
             break;
         case 48000:
-            prv->mclk_ratio = 512;
+            prv->mclk_ratio = 768;
             break;
         case 96000:
-            prv->mclk_ratio = 256;
+            prv->mclk_ratio = 384;
             break;
         case 192000:
-            prv->mclk_ratio = 128;
+            prv->mclk_ratio = 192;
             break;
         case 384000:
-            prv->mclk_ratio = 64;
+            prv->mclk_ratio = 96;
             break;
         case 768000:
-            prv->mclk_ratio = 32;
+            prv->mclk_ratio = 48;
             break;
         default:
             return -EINVAL;
@@ -154,7 +151,7 @@ static int otbelec_snd_probe(struct platform_device *pdev)
     prv = devm_kzalloc(card->dev, sizeof(struct pl_card_data), GFP_KERNEL);
     if (!prv)
         return -ENOMEM;
-    prv->mclk_val = 24576000; //TODO: get mclk freq from device tree.
+    prv->mclk_val = 36864000; //TODO: get mclk freq from device tree.
     snd_soc_card_set_drvdata(card, prv);
 
     ret = snd_soc_register_card(card);
